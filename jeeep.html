@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload GIF, Clock, and Date</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            height: 100vh;
+            background-color: #f0f0f0;
+            position: relative;
+        }
+        #gifContainer {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+        #draggableGif {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 10px;
+        }
+        #uploadButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            z-index: 2;
+        }
+        .dateTimeContainer {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            background-color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: move;
+            z-index: 2;
+        }
+        #clockContainer {
+            position: absolute;
+            top: 150px;
+            left: 20px;
+            background-color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: move;
+            z-index: 2;
+        }
+        #clock, #date {
+            font-size: 1.3em;
+            margin: 0;
+        }
+        #clock {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #date {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <input type="file" id="fileInput" accept=".gif" style="display: none;">
+    <button id="uploadButton">Upload GIF</button>
+    
+    <div id="gifContainer">
+        <img id="draggableGif" src="" alt="Uploaded GIF" style="display: none;">
+    </div>
+
+    <div id="clockContainer" class="dateTimeContainer">
+        <div id="clock"></div>
+    </div>
+
+    <div id="dateContainer" class="dateTimeContainer">
+        <div id="date"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadButton = document.getElementById('uploadButton');
+        const draggableGif = document.getElementById('draggableGif');
+        const clock = document.getElementById('clock');
+        const dateDisplay = document.getElementById('date');
+        const clockContainer = document.getElementById('clockContainer');
+        const dateContainer = document.getElementById('dateContainer');
+
+        uploadButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function() {
+            const file = fileInput.files[0];
+            if (file && file.type === 'image/gif') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    draggableGif.src = e.target.result;
+                    draggableGif.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                alert('Please upload a valid GIF file.');
+            }
+        });
+
+        function updateClockAndDate() {
+            const now = new Date();
+            const options = {
+                timeZone: 'America/Chicago',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            };
+            clock.textContent = now.toLocaleTimeString('en-US', options);
+            dateDisplay.textContent = now.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        }
+        setInterval(updateClockAndDate, 1000);
+        updateClockAndDate();
+
+        function enableDragging(element) {
+            let offsetX, offsetY;
+
+            function startDrag(event) {
+                const clientX = event.clientX || event.touches[0].clientX;
+                const clientY = event.clientY || event.touches[0].clientY;
+                offsetX = clientX - element.getBoundingClientRect().left;
+                offsetY = clientY - element.getBoundingClientRect().top;
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+            }
+
+            function drag(event) {
+                const clientX = event.clientX || event.touches[0].clientX;
+                const clientY = event.clientY || event.touches[0].clientY;
+                element.style.left = (clientX - offsetX) + 'px';
+                element.style.top = (clientY - offsetY) + 'px';
+            }
+
+            function stopDrag() {
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+
+            element.addEventListener('mousedown', startDrag);
+            element.addEventListener('touchstart', startDrag);
+        }
+
+        enableDragging(clockContainer);
+        enableDragging(dateContainer);
+        enableDragging(document.getElementById('gifContainer'));
+    </script>
+</body>
+</html>
